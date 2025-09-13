@@ -1,44 +1,66 @@
-name: Deploy to GitHub Pages
+# Nombre del flujo de trabajo
+name: Deploy Vite site to GitHub Pages
 
+# Define cuándo se debe ejecutar
 on:
+  # Se ejecuta en cada 'push' a la rama 'main'
   push:
-    branches: [ main ] # Se activa cuando haces push a la rama 'main'
+    branches: [ "main" ]
+  # Te permite ejecutarlo manualmente desde la pestaña Actions
   workflow_dispatch:
 
+# Configura los permisos para que la Action pueda desplegar en GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Define los trabajos (jobs) que se ejecutarán
 jobs:
+  # Primer trabajo: construir el sitio
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        # ✅ Actualizado de v3 a v4
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        # ✅ Actualizado a la última versión estable
+        uses: actions/setup-node@v4
         with:
-          node-version: 18 # O la versión que uses
+          node-version: 20 # Puedes usar 18 o 20
           cache: 'npm'
+      
       - name: Install dependencies
         run: npm install
-      - name: Build
+
+      - name: Build project
         run: npm run build
+
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        # ✅ Actualizado a la última versión estable
+        uses: actions/configure-pages@v5
+
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        # ✅ Actualizado de v2 a v3
+        uses: actions/upload-pages-artifact@v3
         with:
+          # Sube el contenido de la carpeta 'dist'
           path: './dist'
 
+  # Segundo trabajo: desplegar el sitio
   deploy:
+    # Necesita que el trabajo 'build' termine correctamente
+    needs: build
+    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        # ✅ Actualizado de v2 a v4
+        uses: actions/deploy-pages@v4
