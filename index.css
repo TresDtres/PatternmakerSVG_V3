@@ -1,0 +1,385 @@
+:root {
+    --primary-color: #007bff;
+    --primary-hover-color: #0056b3;
+    --background-color: #f8f9fa;
+    --canvas-background: #ffffff;
+    --border-color: #dee2e6;
+    --text-color: #212529;
+    --button-text-color: #ffffff;
+    --disabled-color: #c0c0c0;
+    --control-point-color: #007bff;
+    --control-line-color: #888;
+    --smooth-point-color: #007bff;
+    --corner-point-color: #007bff; /* Same color, different shape */
+    --symmetry-axis-color: #8e44ad;
+    --grid-minor-color: #e0e0e0;
+    --grid-major-color: #c0c0c0;
+    --selected-segment-color: #00c4ff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body, #root {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    overflow: hidden; /* Prevent body scrolling */
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 1rem;
+    gap: 0.5rem;
+}
+
+.main-content {
+    display: flex;
+    flex-grow: 1;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.editor-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+h1 {
+    text-align: center;
+    color: var(--text-color);
+    margin-bottom: 0;
+}
+
+p {
+    text-align: center;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: var(--canvas-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.toolbar button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--button-text-color);
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.toolbar button:hover {
+    background-color: var(--primary-hover-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.toolbar button.active {
+    background-color: var(--primary-hover-color);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toolbar button:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.toolbar-group {
+    display: flex;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.toolbar-group button {
+    border-radius: 0;
+    box-shadow: none;
+    border-right: 1px solid rgba(0,0,0,0.1);
+}
+
+.toolbar-group button:last-child {
+    border-right: none;
+}
+
+.drawing-canvas {
+    flex-grow: 1;
+    border: 2px solid var(--border-color);
+    background-color: var(--canvas-background);
+    border-radius: 8px;
+    cursor: crosshair;
+    touch-action: none; /* Prevents default touch actions like scrolling */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    height: 100%;
+}
+
+.drawing-canvas.panning {
+    cursor: grab;
+}
+
+.drawing-canvas.panning:active {
+    cursor: grabbing;
+}
+
+.drawing-canvas.picking-symmetry {
+    cursor: pointer;
+}
+
+
+.current-path {
+    stroke: #000000;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke; /* Keep stroke width constant on zoom */
+}
+
+.selected-segment {
+    stroke: var(--selected-segment-color);
+    fill: none;
+    stroke-linecap: round;
+    pointer-events: none;
+    vector-effect: non-scaling-stroke;
+}
+
+.closed-path {
+    fill: rgba(0, 123, 255, 0.1);
+}
+
+.open-path {
+    fill: none;
+}
+
+.center-axis-guide {
+    stroke: #cccccc;
+    stroke-dasharray: 4, 4;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+}
+
+.symmetry-axis {
+    stroke: var(--symmetry-axis-color);
+    stroke-dasharray: 5, 5;
+    vector-effect: non-scaling-stroke;
+}
+
+.grid-line-minor {
+    stroke: var(--grid-minor-color);
+    stroke-width: 0.5;
+    vector-effect: non-scaling-stroke;
+}
+
+.grid-line-major {
+    stroke: var(--grid-major-color);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+/* Control handle styles */
+.controls {
+    pointer-events: none; /* Group doesn't capture events */
+}
+
+.anchor-point, .control-point {
+    pointer-events: all; /* Children do capture events */
+    cursor: move;
+    transition: transform 0.1s ease-in-out, fill 0.1s ease-in-out;
+}
+
+.anchor-point.corner {
+    fill: var(--corner-point-color);
+}
+
+.anchor-point.smooth {
+    fill: var(--canvas-background);
+    stroke: var(--smooth-point-color);
+}
+
+.anchor-point:hover {
+    transform: scale(1.4);
+}
+
+.control-point {
+    fill: var(--canvas-background);
+    stroke: var(--control-point-color);
+}
+
+.control-point:hover {
+    fill: var(--control-point-color);
+}
+
+.control-line {
+    stroke: var(--control-line-color);
+    stroke-dasharray: 2, 3;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--canvas-background);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
+}
+
+/* Primary button in modal */
+.modal-actions button:last-child {
+    color: var(--button-text-color);
+    background-color: var(--primary-color);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.modal-actions button:last-child:hover {
+    background-color: var(--primary-hover-color);
+}
+
+.modal-actions button:last-child:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Secondary button in modal */
+.modal-actions button:first-child {
+    background-color: #e9ecef;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+.modal-actions button:first-child:hover {
+    background-color: #ced4da;
+}
+
+.measurement-text {
+    fill: #333;
+    font-weight: 500;
+    paint-order: stroke;
+    stroke: white;
+    stroke-width: 3px;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10+ */
+    user-select: none;
+    pointer-events: none;
+}
+
+.measurement-text.live {
+    fill: var(--primary-color);
+}
+
+.node-label-text {
+    fill: var(--primary-hover-color);
+    font-weight: bold;
+    paint-order: stroke;
+    stroke: white;
+    stroke-width: 3px;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Properties Panel */
+.properties-panel {
+    width: 280px;
+    flex-shrink: 0;
+    padding: 1rem;
+    background-color: var(--canvas-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+    overflow-y: auto;
+}
+
+.properties-panel h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #f8f9fa;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
