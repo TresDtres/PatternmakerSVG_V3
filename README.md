@@ -1,5 +1,13 @@
 # Advanced SVG Path Editor v3.0
 
+## ✨ Agradecimientos
+
+Este proyecto fue desarrollado por TresDtres.
+
+La validación de la idea, el refinamiento conceptual y la estructuración de la documentación para la versión 3.0 contaron con la colaboración y asistencia de **Gemini**, un modelo de lenguaje de Google AI. Su participación fue clave para enfocar las características de la herramienta hacia el nicho de la creación de datos para Machine Learning.
+
+
+
 This is a web-based, interactive Bézier curve editor built with React and TypeScript. It allows users to create and manipulate complex SVG paths with precision and ease. Version 3.0 transforms this tool from a simple drawing application into a powerful data-creation platform for AI and machine learning, specifically tailored for pattern making.
 
 ## What's New in Version 3.0
